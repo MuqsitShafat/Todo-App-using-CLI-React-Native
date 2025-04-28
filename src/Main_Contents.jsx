@@ -49,17 +49,31 @@ const Main_Contents = () => {
     if (!currentuser) return;
 
     const unsubscribe = firestore()
-      .collection('Tasks')
-      .where('uid', '==', currentuser.uid)
-      .onSnapshot(querySnapshot => {
+    .collection('Tasks')
+    .where('uid', '==', currentuser.uid)
+    .orderBy('createdAt', 'asc')
+    .onSnapshot(
+      querySnapshot => {
+        if (!querySnapshot || querySnapshot.empty) {
+          console.log('No tasks found.');
+          settask([]);
+          return;
+        }
         const tasklist = [];
         querySnapshot.forEach(doc => {
-          tasklist.push({id: doc.id, ...doc.data()});
+          const data = doc.data();
+          if (data.createdAt) {   // only add if createdAt exists
+            tasklist.push({id: doc.id, ...data});
+          }
         });
-
-        console.log('Tasks:', tasklist); // 🔥 Add this
+        console.log('Tasks:', tasklist);
         settask(tasklist);
-      });
+      },
+      error => {
+        console.error('Firestore query error:', error);
+      }
+    );
+
 
     return () => unsubscribe();
   }, []);
@@ -118,8 +132,9 @@ const Main_Contents = () => {
             </View>
           }
           renderItem={({item}) => (
-            <Text style={styles.tasks_list_text}>{' >  '}
-             {item.name} - {item.age} 
+            <Text style={styles.tasks_list_text}>
+              {' >  '}
+              {item.name} - {item.age}
             </Text>
           )}
         />
@@ -253,7 +268,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#333',
     textAlign: 'center',
-    fontWeight : 'bold'
+    fontWeight: 'bold',
   },
   emptyContainer: {
     flex: 1,
@@ -261,6 +276,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
 });
 export default Main_Contents;

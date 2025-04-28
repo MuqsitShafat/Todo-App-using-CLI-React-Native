@@ -25,30 +25,29 @@ const Tasks_Entry_Component = ({navigation}) => {
       Alert.alert('Enter a valid task and time!');
       return;
     }
-  
+
     if (taskcounter < maxLimit) {
       settaskcounter(taskcounter + 1);
       settask('');
       settasktime('');
-  
+
       const auth = getAuth();
       const currentuser = auth.currentUser;
-  
+
       if (currentuser) {
         try {
-          await firestore()
-            .collection('Tasks')
-            .add({
-              name: task,
-              age: tasktime,
-              userEmail: currentuser.email,
-              uid: currentuser.uid,
-            });
+          await firestore().collection('Tasks').add({
+            name: task,
+            age: tasktime,
+            userEmail: currentuser.email,
+            uid: currentuser.uid,
+            createdAt: firestore.FieldValue.serverTimestamp(),
+          });
           console.log('Task added!');
         } catch (error) {
           console.log(error);
         }
-  
+
         if (taskcounter + 1 <= maxLimit - 1) {
           Alert.alert(`${taskcounter + 1} task entered.`);
         }
